@@ -27,11 +27,17 @@ class RedisNextraClient extends redis.RedisClient {
 		return new Proxy(() => {
 			// noop
 		}, {
-			async apply(target, method, [record, ...args]) {
-				if (!this.ready) throw new Error('Redis not yet ready');
-				if (!this.tables.has(key)) throw new Error('Table does not exist');
-				if (!methods.has(method)) throw new Error('Invalid Redis Call');
-				return this[`${method}Async`](`RDN_${key}_${record}`, ...args);
+			get(target, method) {
+				return new Proxy(() => {
+					// noop
+				}, {
+					async apply(tgt, _b, [record, ...args]) {
+						if (!this.ready) throw new Error('Redis not yet ready');
+						if (!this.tables.has(key)) throw new Error('Table does not exist');
+						if (!methods.has(method)) throw new Error('Invalid Redis Call');
+						return this[`${method}Async`](`RDN_${key}_${record}`, ...args);
+					}
+				});
 			}
 		});
 	}
