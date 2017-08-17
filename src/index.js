@@ -16,7 +16,7 @@ for (const [key, method] of Object.entries(redis.RedisClient.prototype)) {
 class RedisNextraClient extends redis.RedisClient {
 
 	constructor(...args) {
-		super(unifyClient.apply(null, ...args));
+		super(unifyClient(...args));
 		this.tables = new Set();
 		this.keys('RDN_*', (err, keys) => {
 			if (err) this.client.emit('error', err);
