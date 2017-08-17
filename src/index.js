@@ -57,7 +57,7 @@ class RedisNextraClient extends redis.RedisClient {
 	}
 
 	setAsync(key, data, ttl) {
-		if (ttl) return super.setexAsync(key, ttl, JSON.stringify(data));
+		if (ttl) return super.psetexAsync(key, ttl, JSON.stringify(data));
 		return super.setAsync(key, JSON.stringify(data));
 	}
 
