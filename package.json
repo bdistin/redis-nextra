@@ -1,0 +1,22 @@
+{
+  "name": "redis-nextra",
+  "version": "0.0.1",
+  "description": "Node.js V8 Redis, enhanced with util.promisify. Written in full ES2017. Async is the future!",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bdistin/redis-nextra.git"
+  },
+  "author": "bdistin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bdistin/redis-nextra/issues"
+  },
+  "homepage": "https://github.com/bdistin/redis-nextra#readme",
+  "dependencies": {
+    "redis": "^2.8.0"
+  }
+}
