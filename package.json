@@ -15,6 +15,9 @@
   "bugs": {
     "url": "https://github.com/bdistin/redis-nextra/issues"
   },
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "homepage": "https://github.com/bdistin/redis-nextra#readme",
   "dependencies": {
     "redis": "^2.8.0"
