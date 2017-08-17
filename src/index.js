@@ -23,6 +23,7 @@ class RedisNextraClient extends redis.RedisClient {
 	}
 
 	table(key) {
+		const that = this;
 		key = key.replace(/\*|_/g, '');
 		return new Proxy(() => {
 			// noop
@@ -32,10 +33,10 @@ class RedisNextraClient extends redis.RedisClient {
 					// noop
 				}, {
 					async apply(tgt, _b, [record, ...args]) {
-						if (!this.ready) throw new Error('Redis not yet ready');
-						if (!this.tables.has(key)) throw new Error('Table does not exist');
+						if (!that.ready) throw new Error('Redis not yet ready');
+						if (!that.tables.has(key)) throw new Error('Table does not exist');
 						if (!methods.has(method)) throw new Error('Invalid Redis Call');
-						return this[`${method}Async`](`RDN_${key}_${record}`, ...args);
+						return that[`${method}Async`](`RDN_${key}_${record}`, ...args);
 					}
 				});
 			}
