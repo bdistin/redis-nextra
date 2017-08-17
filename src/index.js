@@ -63,8 +63,7 @@ class RedisNextraClient extends redis.RedisClient {
 	}
 
 	async hasAsync(key) {
-		// eslint-disable-next-line no-extra-parens
-		return !!(await super.exists(key));
+		return Boolean(await super.exists(key));
 	}
 
 }
