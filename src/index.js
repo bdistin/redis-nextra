@@ -63,7 +63,9 @@ class RedisNextraClient extends redis.RedisClient {
 	}
 
 	async hasAsync(key) {
-		return Boolean(await super.exists(key));
+		const int = await super.exists(key);
+		console.log(int);
+		return Boolean(int);
 	}
 
 }
