@@ -2,12 +2,9 @@ const redis = require('redis');
 const unifyClient = require('redis/lib/createClient');
 const { promisify } = require('util');
 
-const methods = new Set();
-
 for (const [key, method] of Object.entries(redis.RedisClient.prototype)) {
 	if (typeof method === 'function') {
 		redis.RedisClient.prototype[`${key}Async`] = promisify(method);
-		methods.add(key);
 	}
 }
 
@@ -35,7 +32,7 @@ class RedisNextraClient extends redis.RedisClient {
 					async apply(tgt, _b, [record, ...args]) {
 						if (!that.ready) throw new Error('Redis not yet ready');
 						if (!that.tables.has(key)) throw new Error('Table does not exist');
-						if (!methods.has(method)) throw new Error('Invalid Redis Call');
+						if (!that[`${method}Async`]) throw new Error('Invalid Redis Call');
 						return that[`${method}Async`](`RDN_${key}_${record}`, ...args);
 					}
 				});
