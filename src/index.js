@@ -2,8 +2,6 @@ const redis = require('redis');
 const unifyClient = require('redis/lib/createClient');
 const { promisify } = require('util');
 
-console.log(unifyClient.toString());
-
 const methods = new Set();
 
 for (const [key, method] of Object.entries(redis.RedisClient.prototype)) {
