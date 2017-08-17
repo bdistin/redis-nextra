@@ -56,6 +56,15 @@ class RedisNextraClient extends redis.RedisClient {
 		return this.tables.delete(key);
 	}
 
+	setAsync(key, data, ttl) {
+		if (ttl) return super.setexAsync(key, ttl, JSON.stringify(data));
+		return super.setAsync(key, JSON.stringify(data));
+	}
+
+	async getAsync(key) {
+		return JSON.parse(await super.getAsync(key));
+	}
+
 }
 
 module.exports = RedisNextraClient;
