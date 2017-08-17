@@ -52,7 +52,7 @@ class RedisNextraClient extends redis.RedisClient {
 		key = key.replace(/\*|_/g, '');
 		if (!this.tables.has(key)) throw 'There is no such table.';
 		const keys = await this.keysAsync(`RDN_${key}_*`);
-		await Promise.all(keys.map(ky => this.deleteAsync(ky)));
+		await Promise.all(keys.map(ky => this.delAsync(ky)));
 		return this.tables.delete(key);
 	}
 
