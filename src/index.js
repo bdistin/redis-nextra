@@ -65,6 +65,10 @@ class RedisNextraClient extends redis.RedisClient {
 		return JSON.parse(await super.getAsync(key));
 	}
 
+	async hasAsync(key) {
+		return !!await super.exists(key);
+	}
+
 }
 
 module.exports = RedisNextraClient;
