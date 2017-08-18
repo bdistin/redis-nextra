@@ -19,9 +19,9 @@ const redis = new Redis({});
 
 // Make sure to listen the events from redis.
 redis
-	.on("connect", () => console.log('Redis Connected'))
-	.on("reconnect", () => console.warn('Redis is reconnecting'))
-	.on("error", err => console.error('Redis error:', err));
+	.on('connect', () => console.log('Redis Connected'))
+	.on('reconnect', () => console.warn('Redis is reconnecting'))
+	.on('error', err => console.error('Redis error:', err));
 
 // As in virtual tables, tables.has is sync as it checks a value from a Set.
 // And redis.createTable only adds a new value to said Set.
