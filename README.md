@@ -5,7 +5,7 @@
 [![npm](https://img.shields.io/npm/v/redis-nextra.svg?maxAge=3600)](https://www.npmjs.com/package/redis-nextra)
 [![npm](https://img.shields.io/npm/dt/redis-nextra.svg?maxAge=3600)](https://www.npmjs.com/package/redis-nextra)
 
-Node.js V8 native fs, enhanced with util.promisify and standard extra methods. Written in full ES2017, sans every sync method. *Async is the future!*
+Node.js V8 redis, enhanced with util.promisify and extra functionality. Written in full ES2017. *Async is the future!*
 
 ## Usage
 
