@@ -7,6 +7,39 @@
 
 Node.js V8 native fs, enhanced with util.promisify and standard extra methods. Written in full ES2017, sans every sync method. *Async is the future!*
 
+## Usage
+
+```javascript
+// First, we require redis-nextra.
+const Redis = require('redis-nextra');
+
+// As redis-nextra extends redis.RedisClient, you create the instance in the
+// following way, options are the same.
+const redis = new Redis({});
+
+// Make sure to listen the events from redis.
+redis
+	.on("connect", () => console.log('Redis Connected'))
+	.on("reconnect", () => console.warn('Redis is reconnecting'))
+	.on("error", err => console.error('Redis error:', err));
+
+// As in virtual tables, tables.has is sync as it checks a value from a Set.
+// And redis.createTable only adds a new value to said Set.
+if (!redis.tables.has('users')) redis.createTable('users');
+
+// Check if the key 'Sandra' exists in the virtual table 'users'.
+// If it exists, return true, otherwise set it.
+redis.table('users').has('Sandra')
+    .then(exists => exists ? true : redis.table('users').set('Sandra', { age: 21 }));
+
+// The example above is equal to:
+redis.hasAsync('RDN_users_Sandra')
+    .then(exists => exists ? true : redis.setAsync('RDN_users_Sandra', JSON.stringify({ age: 21 })));
+
+// redis.hasAsync is a method from redis-nextra which calls redis.exists and
+// returns a Boolean.
+```
+
 ## Docs
 
 All methods from `redis.RedisClient`'s prototype are promisified with `Async` appended at the end of the name, it means, when using redis-nextra, you might want to use `redis.prototype.getAsync` instead of `redis.prototype.get`, as the first one is the promisified method and will return a [Native Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises).
