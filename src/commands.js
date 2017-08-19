@@ -2,24 +2,32 @@
 module.exports = {
 	APPEND: { key: 0 },
 	AUTH: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'AUTH', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'AUTH', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	BGREWRITEAOF: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'BGREWRITEAOF', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'BGREWRITEAOF', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	BGSAVE: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'BGSAVE', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'BGSAVE', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	BITCOUNT: { key: 0 },
 	BITOP: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'BITOP', args, args.slice(1), next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'BITOP', args, args.slice(1))
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	BITPOS: { key: 0 },
@@ -27,8 +35,10 @@ module.exports = {
 	BRPOP: { supported: false },
 	BRPOPLPUSH: { supported: false },
 	'CLIENT KILL': {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'CLIENT KILL', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'CLIENT KILL', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	'CLIENT LIST': { supported: false },
@@ -45,23 +55,23 @@ module.exports = {
 	'CONFIG SET': { supported: false },
 	'CONFIG RESETSTAT': { supported: false },
 	DBSIZE: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'DBSIZE', args, (err, data) => {
-				if (err) return next.reject(err);
-				return next.resolve(data.reduce((ma, ca) => ma + ca, 0));
-			});
+		router: function (client, args, next) {
+			fanoutOperation(client, 'DBSIZE', args)
+				.then(data => next.resolve(data.reduce((ma, ca) => ma + ca, 0)))
+				.catch(err => next.reject(err));
 		}
 	},
 	DEBUG: { supported: false },
 	DECR: { key: 0 },
 	DECRBY: { key: 0 },
 	DEL: {
-		router: function (cmd, args, next) {
-			groupOperation(cmd, 'DEL', args, (err, data) => {
-				if (err) return next.reject(err);
-				const sum = Object.values(data).reduce((a, b) => a + b.result, 0);
-				return next.resolve(sum);
-			});
+		router: function (client, args, next) {
+			groupOperation(client, 'DEL', args)
+				.then(data => {
+					const sum = Object.values(data).reduce((a, b) => a + b.result, 0);
+					return next.resolve(sum);
+				})
+				.catch(err => next.reject(err));
 		}
 	},
 	DISCARD: { supported: false },
@@ -71,21 +81,25 @@ module.exports = {
 		nokeys: true
 	},
 	EVAL: {
-		router: function (cmd, args, next) {
+		router: function (client, args, next) {
 			const numkeys = parseInt(args[1], 10);
 
 			if (!numkeys) { return next.reject(new Error('EVAL command without any keys are is supported.')); }
 
-			return singleServerOperation(cmd, 'EVAL', args, args.slice(2, 2 + numkeys), next);
+			return singleServerOperation(client, 'EVAL', args, args.slice(2, 2 + numkeys))
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	EVALSHA: {
-		router: function (cmd, args, next) {
+		router: function (client, args, next) {
 			const numkeys = parseInt(args[1], 10);
 
 			if (!numkeys) { return next.reject(new Error('EVALSHA command without any keys are is supported.')); }
 
-			return singleServerOperation(cmd, 'EVALSHA', args, args.slice(2, 2 + numkeys), next);
+			return singleServerOperation(client, 'EVALSHA', args, args.slice(2, 2 + numkeys))
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	EXEC: {
@@ -124,8 +138,10 @@ module.exports = {
 	INCRBY: { key: 0 },
 	INCRBYFLOAT: { key: 0 },
 	INFO: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'INFO', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'INFO', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	KEYS: { key: 0 },
@@ -141,19 +157,19 @@ module.exports = {
 	LSET: { key: 0 },
 	LTRIM: { key: 0 },
 	MGET: {
-		router: function (cmd, args, next) {
-			groupOperation(cmd, 'MGET', args, (err, data) => {
-				if (err) return next.reject(err);
-				const result = [];
-
-				for (const res of Object.values(data)) {
-					for (let i = 0; i < res.result.length; i++) {
-						result[res.indexes[i]] = res.result[i];
+		router: function (client, args, next) {
+			groupOperation(client, 'MGET', args)
+				.then(data => {
+					const result = [];
+					for (const res of Object.values(data)) {
+						for (let i = 0; i < res.result.length; i++) {
+							result[res.indexes[i]] = res.result[i];
+						}
 					}
-				}
 
-				return next.resolve(result);
-			});
+					return next.resolve(result);
+				})
+				.catch(err => next.reject(err));
 		}
 	},
 	MIGRATE: { key: 2 },
@@ -168,25 +184,27 @@ module.exports = {
 	PEXPIREAT: { key: 0 },
 	PFADD: { key: 0 },
 	PFCOUNT: {
-		router: function (cmd, args, next) {
-			groupOperation(cmd, 'PFCOUNT', args, (err, data) => {
-				if (err) return next.reject(err);
-				const sum = Object.values(data).reduce((a, b) => a + b.result, 0);
-				return next.resolve(sum);
-			});
+		router: function (client, args, next) {
+			groupOperation(client, 'PFCOUNT', args)
+				.then(data => {
+					const sum = Object.values(data).reduce((a, b) => a + b.result, 0);
+					return next.resolve(sum);
+				})
+				.catch(err => next.reject(err));
 		}
 	},
 	PFMERGE: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'PFMERGE', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'PFMERGE', args, next)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	PING: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'PING', args, (err) => {
-				if (err) return next.reject(err);
-				return next.resolve('PONG');
-			});
+		router: function (client, args, next) {
+			fanoutOperation(client, 'PING', args)
+				.then(() => next.resolve('PONG'))
+				.catch(err => next.reject(err));
 		}
 	},
 	PSETEX: { key: 0 },
@@ -196,68 +214,86 @@ module.exports = {
 	PUBLISH: { supported: false },
 	PUNSUBSCRIBE: { supported: false },
 	QUIT: {
-		router: function (cmd, args, next) {
-			cmd.end();
+		router: function (client, args, next) {
+			client.end();
 			next.resolve();
 		}
 	},
 	RANDOMKEY: {
-		router: function (cmd, args, next) {
-			const servers = Object.keys(cmd.servers);
+		router: function (client, args, next) {
+			const servers = Object.keys(client.servers);
 			const sel = servers[Math.floor(Math.random() * servers.length)];
 
-			cmd.sendToServer(sel, 'RANDOMKEY', args, next);
+			client.sendToServer(sel, 'RANDOMKEY', args, next);
 		}
 	},
 	RENAME: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'RENAME', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'RENAME', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	RENAMENX: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'RENAMENX', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'RENAMENX', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	RESTORE: { key: 0 },
 	ROLE: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'ROLE', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'ROLE', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	RPOP: { key: 0 },
 	RPOPLPUSH: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'RPOPLPUSH', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'RPOPLPUSH', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	RPUSH: { key: 0 },
 	RPUSHX: { key: 0 },
 	SADD: { key: 0 },
 	SAVE: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'SAVE', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'SAVE', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SCARD: { key: 0 },
 	SCRIPT: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'SCRIPT', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'SCRIPT', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SDIFF: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'SDIFF', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'SDIFF', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SDIFFSTORE: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'SDIFFSTORE', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'SDIFFSTORE', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SELECT: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'SELECT', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'SELECT', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SET: { key: 0 },
@@ -266,18 +302,24 @@ module.exports = {
 	SETNX: { key: 0 },
 	SETRANGE: { key: 0 },
 	SHUTDOWN: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'SHUTDOWN', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'SHUTDOWN', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SINTER: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'SINTER', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'SINTER', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SINTERSTORE: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'SINTERSTORE', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'SINTERSTORE', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SISMEMBER: { key: 0 },
@@ -285,8 +327,10 @@ module.exports = {
 	SLOWLOG: { supported: false },
 	SMEMBERS: { key: 0 },
 	SMOVE: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'SMOVE', args, args.slice(0, args.length - 1), next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'SMOVE', args, args.slice(0, args.length - 1))
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SORT: { key: 0 },
@@ -296,19 +340,25 @@ module.exports = {
 	STRLEN: { key: 0 },
 	SUBSCRIBE: { supported: false },
 	SUNION: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'SUNION', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'SUNION', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SUNIONSTORE: {
-		router: function (cmd, args, next) {
-			singleServerOperation(cmd, 'SUNIONSTORE', args, next);
+		router: function (client, args, next) {
+			singleServerOperation(client, 'SUNIONSTORE', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SYNC: { supported: false },
 	TIME: {
-		router: function (cmd, args, next) {
-			fanoutOperation(cmd, 'TIME', args, next);
+		router: function (client, args, next) {
+			fanoutOperation(client, 'TIME', args)
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	TTL: { key: 0 },
@@ -321,12 +371,14 @@ module.exports = {
 	ZCOUNT: { key: 0 },
 	ZINCRBY: { key: 0 },
 	ZINTERSTORE: {
-		router: function (cmd, args, next) {
+		router: function (client, args, next) {
 			const numkeys = parseInt(args[1], 10);
 
 			if (isNaN(numkeys) || numkeys <= 0) { return next.reject(new Error('Invalid arguments')); }
 
-			return singleServerOperation(cmd, 'ZINTERSTORE', args, [args[0]].concat(args.slice(2, numkeys + 2)), next);
+			return singleServerOperation(client, 'ZINTERSTORE', args, [args[0]].concat(args.slice(2, numkeys + 2)))
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	ZLEXCOUNT: { key: 0 },
@@ -344,12 +396,14 @@ module.exports = {
 	ZREVRANK: { key: 0 },
 	ZSCORE: { key: 0 },
 	ZUNIONSTORE: {
-		router: function (cmd, args, next) {
+		router: function (client, args, next) {
 			const numkeys = parseInt(args[1], 0);
 
 			if (isNaN(numkeys) || numkeys <= 0) { return next.reject(new Error('Invalid arguments')); }
 
-			return singleServerOperation(cmd, 'ZUNIONSTORE', args, [args[0]].concat(args.slice(2, numkeys + 2)), next);
+			return singleServerOperation(client, 'ZUNIONSTORE', args, [args[0]].concat(args.slice(2, numkeys + 2)))
+				.then(data => next.resolve(data))
+				.catch(err => next.reject(err));
 		}
 	},
 	SCAN: {
@@ -363,70 +417,48 @@ module.exports = {
 
 /* eslint-enable func-names */
 
-function singleServerOperation(client, cmd, args, keys, next) {
-	if (typeof keys === 'function') {
-		next = keys;
-		keys = args;
-	}
+function singleServerOperation(client, cmd, args, keys) {
+	return new Promise((resole, reject) => {
+		if (!keys.length) { return reject(new Error('Invalid arguments')); }
 
-	if (!keys.length) { return next.reject(new Error('Invalid arguments')); }
+		let server;
 
-	let server;
+		for (let i = 0; i < keys.length; i++) {
+			const as = client.serverNameForKey(keys[i]);
+			if (!server) server = as;
+			if (server !== as) return reject(new Error(`Keys are mapped to different hash slots for command ${cmd}`));
+		}
 
-	for (let i = 0; i < keys.length; i++) {
-		const as = client.serverNameForKey(keys[i]);
-		if (!server) server = as;
-		if (server !== as) return next.reject(new Error(`Keys are mapped to different hash slots for command ${cmd}`));
-	}
-
-	return client.sendToServer(server, cmd, args, next);
+		return client.sendToServer(server, client, args, { resole, reject });
+	});
 }
 
-function fanoutOperation(client, cmd, args, next) {
-	const results = [];
-	const servers = Object.keys(client.servers);
-	let	ops = servers.length;
-
-	for (const server of servers) {
-		client.sendToServer(server, cmd, args, (err, data) => {
-			if (err && ops >= 0) {
-				ops = -1;
-				if (typeof next === 'function') return next(err);
-				return next.reject(err);
-			}
-			return results.push(data);
-		});
-	}
-	if (typeof next === 'function') return next(results);
-	return next.resolve(results);
+function fanoutOperation(client, cmd, args) {
+	return Promise.all(Object.keys(client.servers).map(server => new Promise((resolve, reject) => client.sendToServer(server, cmd, args, { resolve, reject }))));
 }
 
-function groupOperation(client, cmd, args, next) {
-	if (!args.length) { return next(new Error('Invalid arguments')); }
+function groupOperation(client, cmd, args) {
+	return new Promise((resolve, reject) => {
+		if (!args.length) { return reject(new Error('Invalid arguments')); }
 
-	if (args.length === 1) { return client.sendToServer(client.serverNameForKey(args[0]), cmd, args, next); }
+		if (args.length === 1) { return client.sendToServer(client.serverNameForKey(args[0]), cmd, args, { resolve, reject }); }
 
-	const groups = {};
+		const groups = {};
 
-	for (let i = 0; i < args.length; i++) {
-		const server = client.serverNameForKey(args[i]);
-		groups[server] = groups[server] || { args: [], indexes: [] };
-		groups[server].args.push(args[i]);
-		groups[server].indexes.push(i);
-	}
+		for (let i = 0; i < args.length; i++) {
+			const server = client.serverNameForKey(args[i]);
+			groups[server] = groups[server] || { args: [], indexes: [] };
+			groups[server].args.push(args[i]);
+			groups[server].indexes.push(i);
+		}
 
-	const servers = Object.keys(groups);
-	let ops = servers.length;
+		const servers = Object.keys(groups);
 
-	for (const server of servers) {
-		client.sendToServer(server, cmd, groups[server].args, (err, data) => {
-			if (err && ops >= 0) {
-				ops = -1;
-				return next(err);
-			}
-			groups[server].result = data;
-			return null;
-		});
-	}
-	return next(groups);
+		Promise.all(servers.map(server => new Promise((res, rej) => client.sendToServer(server, cmd, groups[server].args, { resolve: res, reject: rej }))))
+			.then(results => {
+				for (let i = 0; i < servers.length; i++) groups[servers[i]].result = results[i];
+				return resolve(groups);
+			})
+			.catch(err => reject(err));
+	});
 }

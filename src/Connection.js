@@ -81,6 +81,7 @@ class Connection extends EventEmitter {
 			const handler = this.handlers.shift();
 
 			if (response && response instanceof Error) return handler.reject(response);
+			if (typeof handler === 'function') return handler(null, response);
 			return handler.resolve(response);
 		});
 	}
@@ -92,6 +93,7 @@ class Connection extends EventEmitter {
 		this.reconnecting = true;
 
 		for (const handler of this.handlers) {
+			if (typeof handler === 'function') handler(new Error(`Server connection lost to ${this.host.string}`));
 			handler.reject(new Error(`Server connection lost to ${this.host.string}`));
 		}
 		this.handlers = [];
