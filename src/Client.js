@@ -38,7 +38,65 @@ class Client extends EventEmitter {
 				replacementHosts: options.replacementHosts
 			});
 		}
+		this.tables = new Set();
+		this.keys('RDN_*')
+			.then(keys => {
+				for (const key of keys) this.tables.add(/^RDN_([^_]+)_/.exec(key)[1]);
+			})
+			.catch(err => this.emit('error', err));
 	}
+
+	/* Nextra Methods */
+
+	// Virtual Tables
+
+	table(key) {
+		const that = this;
+		key = key.replace(/\*|_/g, '');
+		return new Proxy(() => {
+			// noop
+		}, {
+			get(target, method) {
+				return new Proxy(() => {
+					// noop
+				}, {
+					async apply(tgt, _b, [record, ...args]) {
+						// if (!that.ready) throw new Error('Redis not yet ready');
+						if (!that.tables.has(key)) throw new Error('Table does not exist');
+						if (!that[method]) throw new Error('Invalid Redis Call');
+						return that[method](`RDN_${key}_${record}`, ...args);
+					}
+				});
+			}
+		});
+	}
+
+	createTable(key) {
+		key = key.replace(/\*|_/g, '');
+		return this.tables.add(key);
+	}
+
+	async deleteTable(key) {
+		key = key.replace(/\*|_/g, '');
+		if (!this.tables.has(key)) throw 'There is no such table.';
+		const keys = await this.keys(`RDN_${key}_*`);
+		await Promise.all(keys.map(ky => this.del(ky)));
+		return this.tables.delete(key);
+	}
+
+	// Extra Methods
+
+	cacheJson(key, data, ttl) {
+		if (ttl) return this.sendCommand('PSETEX', key, ttl, JSON.stringify(data));
+		return this.sendCommand('SET', key, JSON.stringify(data));
+	}
+
+	async getJson(key) {
+		const data = await this.sendCommand('GET', key);
+		return JSON.parse(data);
+	}
+
+	/* End Nextra Methods */
 
 	sendCommand(cmd, ...args) {
 		return new Promise((resolve, reject) => {
