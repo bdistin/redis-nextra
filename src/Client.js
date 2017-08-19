@@ -6,7 +6,7 @@ const Server = require('./Server');
 const OfflineQueue = require('./OfflineQueue');
 const Script = require('./Script');
 const commands = require('./commands');
-
+console.log('this was required');
 class Client extends EventEmitter {
 
 	constructor(hosts, options = {}) {
@@ -172,5 +172,5 @@ for (const [cmd, info] of Object.entries(commands)) {
 		return this.sendCommand(cmd, ...args);
 	};
 }
-
+console.log(Client);
 module.exports = Client;
