@@ -6,7 +6,7 @@ const Server = require('./Server');
 const OfflineQueue = require('./OfflineQueue');
 const Script = require('./Script');
 const commands = require('./commands');
-console.log('this was required');
+
 class Client extends EventEmitter {
 
 	constructor(hosts, options = {}) {
@@ -165,12 +165,12 @@ class Client extends EventEmitter {
 
 }
 
-for (const [cmd, info] of Object.entries(commands)) {
+/* for (const [cmd, info] of Object.entries(commands)) {
 	if (info.supported === false) { return; }
 	// eslint-disable-next-line func-names
 	Client.prototype[cmd.toLowerCase()] = function (...args) {
 		return this.sendCommand(cmd, ...args);
 	};
-}
+} */
 console.log(Client);
 module.exports = Client;
