@@ -22,7 +22,8 @@ const redis = new Redis.Client({ "host1:port": 1, host2: 2 }, options); // host 
 
 // Make sure to listen the events from redis.
 redis
-	.on('reconnect', () => console.warn('Redis is reconnecting'))
+    .on('ready', () => console.log('Redis-Nextra is ready.'))
+	.on('serverReconnect', server => console.warn(`Redis server: ${server.host.string} is reconnecting`))
 	.on('error', err => console.error('Redis error:', err));
 
 // As in virtual tables, tables.has is sync as it checks a value from a Set.
