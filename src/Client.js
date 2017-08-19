@@ -81,12 +81,12 @@ class Client extends EventEmitter {
 		return this.ring.getCached(key);
 	}
 
-	sendToServer(name, cmd, args) {
+	sendToServer(name, cmd, args, next) {
 		const server = this.servers[name];
 
 		if (!server) { return Promise.reject(new Error('Unable to acquire any server connections.')); }
 
-		return server.sendCommand(cmd, args);
+		return server.sendCommand(cmd, args, next);
 	}
 
 	getServers(name) {
