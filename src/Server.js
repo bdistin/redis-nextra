@@ -1,6 +1,6 @@
 const EventEmitter = require('events');
-const Connection = require('./connection.js');
-const OfflineQueue = require('./offline-queue.js');
+const Connection = require('./Connection.js');
+const OfflineQueue = require('./OfflineQueue.js');
 
 class Server extends EventEmitter {
 
