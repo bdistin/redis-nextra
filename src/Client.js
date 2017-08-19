@@ -84,7 +84,7 @@ class Client extends EventEmitter {
 	sendToServer(name, cmd, args, next) {
 		const server = this.servers[name];
 
-		if (!server) { return Promise.reject(new Error('Unable to acquire any server connections.')); }
+		if (!server) { return next.reject(new Error('Unable to acquire any server connections.')); }
 
 		return server.sendCommand(cmd, args, next);
 	}
