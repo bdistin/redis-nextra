@@ -201,8 +201,8 @@ class Client extends EventEmitter {
 			delete this.offlineQueue;
 
 			for (const entry of offlineCommands) this.sendCommand(...entry);
-			this.emit('ready');
 		}
+		this.emit('ready');
 	}
 
 	_makeError(status) {
