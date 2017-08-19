@@ -391,17 +391,18 @@ function fanoutOperation(client, cmd, args, next) {
 		client.sendToServer(server, cmd, args, (err, data) => {
 			if (err && ops >= 0) {
 				ops = -1;
+				if (typeof next === 'function') return next(err);
 				return next.reject(err);
 			}
-
 			return results.push(data);
 		});
 	}
+	if (typeof next === 'function') return next(results);
 	return next.resolve(results);
 }
 
 function groupOperation(client, cmd, args, next) {
-	if (!args.length) { return next.reject(new Error('Invalid arguments')); }
+	if (!args.length) { return next(new Error('Invalid arguments')); }
 
 	if (args.length === 1) { return client.sendToServer(client.serverNameForKey(args[0]), cmd, args, next); }
 
@@ -421,11 +422,11 @@ function groupOperation(client, cmd, args, next) {
 		client.sendToServer(server, cmd, groups[server].args, (err, data) => {
 			if (err && ops >= 0) {
 				ops = -1;
-				return next.reject(err);
+				return next(err);
 			}
 			groups[server].result = data;
 			return null;
 		});
 	}
-	return next.resolve(groups);
+	return next(groups);
 }
