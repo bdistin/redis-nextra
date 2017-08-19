@@ -48,7 +48,7 @@ class Connection extends EventEmitter {
 			}
 		}
 
-		if (cmd) { this.stream.write(cmd); }
+		if (command) { this.stream.write(command); }
 	}
 
 	_attachEvents() {
@@ -61,7 +61,7 @@ class Connection extends EventEmitter {
 		this.stream.on('close', this._connectionLost.bind(this, 'close'));
 		this.stream.on('end', this._connectionLost.bind(this, 'end'));
 		this.stream.on('error', (msg) => {
-			this.emit('error', new Error(`redis-lite connection to ${this.host.string} failed: ${msg}`));
+			this.emit('error', new Error(`redis-nextra connection to ${this.host.string} failed: ${msg}`));
 			this._connectionLost('error');
 		});
 

@@ -51,9 +51,7 @@ class Server extends EventEmitter {
 			}
 		}
 
-		if (this.offlineQueue) {
-			this.offlineQueue.push(cmd, args, next);
-		}
+		if (this.offlineQueue) return this.offlineQueue.push(cmd, args, next);
 		return next.reject(new Error(`Unable to acquire connection to server ${this.host.string}`));
 	}
 
