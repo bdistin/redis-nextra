@@ -20,7 +20,11 @@ class Client extends EventEmitter {
 			connectionsPerServer: options.connectionsPerServer,
 			enableOfflineQueue: options.enableOfflineQueue
 		};
-
+		this.ready = false;
+		this.tables = new Set();
+		this.once('ready', () => {
+			this.ready = true;
+		});
 		if (typeof hosts === 'function') {
 			this.offlineQueue = new OfflineQueue();
 
@@ -38,7 +42,6 @@ class Client extends EventEmitter {
 				replacementHosts: options.replacementHosts
 			});
 		}
-		this.tables = new Set();
 		this.keys('RDN_*')
 			.then(keys => {
 				for (const key of keys) this.tables.add(/^RDN_([^_]+)_/.exec(key)[1]);
@@ -61,7 +64,7 @@ class Client extends EventEmitter {
 					// noop
 				}, {
 					async apply(tgt, _b, [record, ...args]) {
-						// if (!that.ready) throw new Error('Redis not yet ready');
+						if (!that.ready) throw new Error('Redis not yet ready');
 						if (!that.tables.has(key)) throw new Error('Table does not exist');
 						if (!that[method]) throw new Error('Invalid Redis Call');
 						return that[method](`RDN_${key}_${record}`, ...args);
@@ -198,6 +201,7 @@ class Client extends EventEmitter {
 			delete this.offlineQueue;
 
 			for (const entry of offlineCommands) this.sendCommand(...entry);
+			this.emit('ready');
 		}
 	}
 
