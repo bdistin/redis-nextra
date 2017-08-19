@@ -82,7 +82,7 @@ class Client extends EventEmitter {
 	async deleteTable(key) {
 		key = key.replace(/\*|_/g, '');
 		if (!this.tables.has(key)) throw 'There is no such table.';
-		const keys = await this.keys(`RDN_${key}_*`);
+		const keys = await this.sendCommand('KEYS', `RDN_${key}_*`);
 		await Promise.all(keys.map(ky => this.del(ky)));
 		return this.tables.delete(key);
 	}
@@ -109,11 +109,11 @@ class Client extends EventEmitter {
 	}
 
 	values(key) {
-		return this.keys(key).then(keys => this.mget(...keys)).catch(() => []);
+		return this.sendCommand('KEYS', key).then(keys => this.sendCommand('MGET', ...keys)).catch(() => []);
 	}
 
 	valuesJson(key) {
-		return this.keys(key).then(keys => this.mgetJson(...keys)).catch(() => []);
+		return this.sendCommand('KEYS', key).then(keys => this.mgetJson(...keys)).catch(() => []);
 	}
 
 	/* End Nextra Methods */
