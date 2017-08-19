@@ -166,7 +166,7 @@ class Client extends EventEmitter {
 }
 
 for (const [cmd, info] of Object.entries(commands)) {
-	if (info.supported === true) {
+	if (info.supported !== false) {
 		// eslint-disable-next-line func-names
 		Client.prototype[cmd.toLowerCase()] = function (...args) {
 			return this.sendCommand(cmd, ...args);
