@@ -96,6 +96,23 @@ class Client extends EventEmitter {
 		return JSON.parse(data);
 	}
 
+	async mgetJson(key) {
+		const data = await this.sendCommand('MGET', key);
+		return data.map(datum => JSON.parse(datum));
+	}
+
+	async has(key) {
+		return Boolean(await this.sendCommand('EXISTS', key));
+	}
+
+	values(key) {
+		return this.keys(key).then(keys => this.mget(...keys)).catch(() => []);
+	}
+
+	valuesJson(key) {
+		return this.keys(key).then(keys => this.mgetJson(...keys)).catch(() => []);
+	}
+
 	/* End Nextra Methods */
 
 	sendCommand(cmd, ...args) {
