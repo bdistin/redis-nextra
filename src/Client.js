@@ -99,8 +99,8 @@ class Client extends EventEmitter {
 		return JSON.parse(data);
 	}
 
-	async mgetJson(key) {
-		const data = await this.sendCommand('MGET', key);
+	async mgetJson(...keys) {
+		const data = await this.sendCommand('MGET', ...keys);
 		return data.map(datum => JSON.parse(datum));
 	}
 
