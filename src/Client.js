@@ -86,7 +86,7 @@ class Client extends EventEmitter {
 
 	// Extra Methods
 
-	cacheJson(key, data, ttl) {
+	setJson(key, data, ttl) {
 		if (ttl) return this.sendCommand('PSETEX', key, ttl, JSON.stringify(data));
 		return this.sendCommand('SET', key, JSON.stringify(data));
 	}

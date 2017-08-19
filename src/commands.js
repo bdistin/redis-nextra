@@ -128,14 +128,8 @@ module.exports = {
 			fanoutOperation(cmd, 'INFO', args, next);
 		}
 	},
-	KEYS: {
-		duplicate: true,
-		nokeys: true
-	},
-	LASTSAVE: {
-		duplicate: true,
-		nokeys: true
-	},
+	KEYS: { key: 0 },
+	LASTSAVE: { key: 0 },
 	LINDEX: { key: 0 },
 	LINSERT: { key: 0 },
 	LLEN: { key: 0 },
