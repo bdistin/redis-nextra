@@ -165,12 +165,13 @@ class Client extends EventEmitter {
 
 }
 
-/* for (const [cmd, info] of Object.entries(commands)) {
-	if (info.supported === false) { return; }
-	// eslint-disable-next-line func-names
-	Client.prototype[cmd.toLowerCase()] = function (...args) {
-		return this.sendCommand(cmd, ...args);
-	};
-} */
-console.log(Client);
+for (const [cmd, info] of Object.entries(commands)) {
+	if (info.supported === true) {
+		// eslint-disable-next-line func-names
+		Client.prototype[cmd.toLowerCase()] = function (...args) {
+			return this.sendCommand(cmd, ...args);
+		};
+	}
+}
+
 module.exports = Client;
