@@ -42,6 +42,11 @@ class Client extends EventEmitter {
 				replacementHosts: options.replacementHosts
 			});
 		}
+		let connected = 0;
+		this.on('serverConnect', () => {
+			connected++;
+			if (connected === this.hosts.length) this.emit('ready');
+		});
 		this.keys('RDN_*')
 			.then(keys => {
 				for (const key of keys) this.tables.add(/^RDN_([^_]+)_/.exec(key)[1]);
@@ -202,7 +207,6 @@ class Client extends EventEmitter {
 
 			for (const entry of offlineCommands) this.sendCommand(...entry);
 		}
-		this.emit('ready');
 	}
 
 	_makeError(status) {
@@ -231,6 +235,9 @@ class Client extends EventEmitter {
 
 				if (!Object.keys(this.servers).length) { this.emit('error', this._makeError({ message: 'No server connections available.', code: 'NO_CONNECTIONS' })); }
 			});
+
+			server.on('connect', () => this.emit('serverConnect', server));
+			server.on('reconnect', () => this.emit('serverReconnect', server));
 
 			if (replacementOf) {
 				this.ring.replace({ key: replacementOf.string }, { key: host.string, weight: host.weight });
