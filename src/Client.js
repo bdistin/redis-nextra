@@ -13,6 +13,7 @@ class Client extends EventEmitter {
 		super();
 
 		this.serverOptions = {
+			password: options.password,
 			socketNoDelay: options.socketNoDelay,
 			socketKeepAlive: options.socketKeepAlive,
 			removeTimeout: options.removeTimeout,
