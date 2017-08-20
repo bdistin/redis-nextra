@@ -13,7 +13,6 @@ class Client extends EventEmitter {
 		super();
 
 		this.serverOptions = {
-			password: options.password,
 			socketNoDelay: options.socketNoDelay,
 			socketKeepAlive: options.socketKeepAlive,
 			removeTimeout: options.removeTimeout,
@@ -44,6 +43,9 @@ class Client extends EventEmitter {
 			});
 		}
 		let connected = 0;
+		if (options.password) {
+			this.sendCommand('AUTH', options.password);
+		}
 		this.on('serverConnect', () => {
 			connected++;
 			if (connected === this.hosts.length) this.emit('ready');

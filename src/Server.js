@@ -30,11 +30,6 @@ class Server extends EventEmitter {
 				}
 			});
 		}
-		if (options.password) {
-			new Promise((resolve, reject) => {
-				this.sendCommand('AUTH', [options.password], { resolve, reject });
-			}).catch(err => this.emit('error', err));
-		}
 		this.connections = this._createConnections();
 	}
 
