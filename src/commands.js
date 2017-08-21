@@ -418,7 +418,7 @@ module.exports = {
 /* eslint-enable func-names */
 
 function singleServerOperation(client, cmd, args, keys) {
-	return new Promise((resole, reject) => {
+	return new Promise((resolve, reject) => {
 		if (!keys.length) { return reject(new Error('Invalid arguments')); }
 
 		let server;
@@ -429,7 +429,7 @@ function singleServerOperation(client, cmd, args, keys) {
 			if (server !== as) return reject(new Error(`Keys are mapped to different hash slots for command ${cmd}`));
 		}
 
-		return client.sendToServer(server, client, args, { resole, reject });
+		return client.sendToServer(server, client, args, { resolve, reject });
 	});
 }
 
@@ -454,7 +454,7 @@ function groupOperation(client, cmd, args) {
 
 		const servers = Object.keys(groups);
 
-		Promise.all(servers.map(server => new Promise((res, rej) => client.sendToServer(server, cmd, groups[server].args, { resolve: res, reject: rej }))))
+		return Promise.all(servers.map(server => new Promise((res, rej) => client.sendToServer(server, cmd, groups[server].args, { resolve: res, reject: rej }))))
 			.then(results => {
 				for (let i = 0; i < servers.length; i++) groups[servers[i]].result = results[i];
 				return resolve(groups);

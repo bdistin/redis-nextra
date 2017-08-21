@@ -1,35 +1,25 @@
-const EventEmitter = require('events');
 const Connection = require('./Connection.js');
 const OfflineQueue = require('./OfflineQueue.js');
 
-class Server extends EventEmitter {
+class Server {
 
-	constructor(host, options) {
-		super();
-
+	constructor(client, manager, host) {
+		this.client = client;
 		this.host = host;
 		this.connected = false;
 		this.weight = host.weight;
-		this.removeTimeout = options.removeTimeout;
-		this.connectionsPerServer = options.connectionsPerServer || 1;
-		this.enableOfflineQueue = typeof options.enableOfflineQueue === 'undefined' ? true : !!options.enableOfflineQueue;
+		this.removeTimeout = manager.serverOptions.removeTimeout;
+		this.connectionsPerServer = manager.serverOptions.connectionsPerServer || 1;
+		this.enableOfflineQueue = typeof manager.serverOptions.enableOfflineQueue === 'undefined' ? true : !!manager.serverOptions.enableOfflineQueue;
 
 		this.connectionOptions = {
-			socketNoDelay: options.socketNoDelay,
-			socketKeepAlive: options.socketKeepAlive,
-			retryDelay: options.retryDelay,
+			socketNoDelay: manager.serverOptions.socketNoDelay,
+			socketKeepAlive: manager.serverOptions.socketKeepAlive,
+			retryDelay: manager.serverOptions.retryDelay,
 			host: host
 		};
 
-		if (this.enableOfflineQueue) {
-			this.offlineQueue = new OfflineQueue();
-
-			this.on('connect', () => {
-				for (const entry of this.offlineQueue.drain()) {
-					this.sendCommand(entry.cmd, entry.args, entry.handler);
-				}
-			});
-		}
+		this.offlineQueue = this.enableOfflineQueue ? new OfflineQueue() : null;
 		this.connections = this._createConnections();
 	}
 
@@ -54,11 +44,19 @@ class Server extends EventEmitter {
 		return next.reject(new Error(`Unable to acquire connection to server ${this.host.string}`));
 	}
 
+	end() {
+		for (const conn of this.connections) conn.end();
+		this.offlineQueue.flush(new Error(`Server connection lost to ${this.host.string}`));
+		this.offlineQueue = null;
+		this.connected = false;
+		this.ended = true;
+	}
+
 	_createConnections() {
 		const conns = [];
 
 		for (let i = 0; i < this.connectionsPerServer; i++) {
-			const conn = new Connection(this.host, this.connectionOptions);
+			const conn = new Connection(this.client, this.host, this.connectionOptions);
 			conn.on('connect', this._checkState.bind(this));
 			conn.on('reconnect', this._checkState.bind(this));
 			conn.on('error', this._checkState.bind(this));
@@ -78,30 +76,22 @@ class Server extends EventEmitter {
 			if (this.connections[i].connected) { this.connected = true; }
 		}
 
-		if (this.connected && !oldstate) { this.emit('connect'); }
+		if (this.connected && !oldstate) this.client.emit('serverConnect', this);
 
 		if (!this.connected) {
 			if (this.removeTimeout && !this._removeTimer) {
 				this._removeTimer = setTimeout(() => {
 					if (this.connected) return;
-					this.emit('remove');
+					this.client.emit('serverRemove', this);
 					this.end();
 				}, this.removeTimeout);
 			} else if (!this.removeTimeout) {
-				this.emit('reconnect');
+				this.client.emit('serverReconnect', this);
 			}
 		} else if (this._removeTimer) {
 			clearTimeout(this._removeTimer);
 			this._removeTimer = null;
 		}
-	}
-
-	end() {
-		for (const conn of this.connections) conn.end();
-		this.offlineQueue.flush(new Error(`Server connection lost to ${this.host.string}`));
-		this.offlineQueue = null;
-		this.connected = false;
-		this.ended = true;
 	}
 
 }

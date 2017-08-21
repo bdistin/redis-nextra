@@ -4,18 +4,15 @@ const hiredis = require('hiredis');
 
 class Connection extends EventEmitter {
 
-	constructor(host, options = {}) {
+	constructor(client, host, options = {}) {
 		super();
-
+		this.client = client;
 		this.host = host;
 		this.retryDelay = options.retryDelay || 2000;
 		this.socketNoDelay = typeof options.socketNoDelay === 'undefined' ? true : !!options.socketNoDelay;
 		this.socketKeepAlive = typeof options.socketKeepAlive === 'undefined' ? true : !!options.socketKeepAlive;
-
 		this.stream = net.createConnection(this.host.port, this.host.host);
-
-		if (this.socketNoDelay) { this.stream.setNoDelay(true); }
-
+		if (this.socketNoDelay) this.stream.setNoDelay(true);
 		this.stream.setKeepAlive(this.socketKeepAlive);
 		this.stream.setTimeout(0);
 
@@ -51,6 +48,17 @@ class Connection extends EventEmitter {
 		if (command) { this.stream.write(command); }
 	}
 
+	end() {
+		if (this.ended) { return; }
+
+		this.stream.end();
+		this.ended = true;
+		this.connected = false;
+		this.emit('end');
+
+		clearTimeout(this._retryTimer);
+	}
+
 	_attachEvents() {
 		this.stream.on('connect', () => {
 			this.connected = true;
@@ -61,7 +69,7 @@ class Connection extends EventEmitter {
 		this.stream.on('close', this._connectionLost.bind(this, 'close'));
 		this.stream.on('end', this._connectionLost.bind(this, 'end'));
 		this.stream.on('error', (msg) => {
-			this.emit('error', new Error(`redis-nextra connection to ${this.host.string} failed: ${msg}`));
+			this.client.emit('error', new Error(`redis-nextra connection to ${this.host.string} failed: ${msg}`));
 			this._connectionLost('error');
 		});
 
@@ -105,17 +113,6 @@ class Connection extends EventEmitter {
 			this.reconnecting = false;
 			this.stream.connect(this.host.port, this.host.host);
 		}, this.retryDelay);
-	}
-
-	end() {
-		if (this.ended) { return; }
-
-		this.stream.end();
-		this.ended = true;
-		this.connected = false;
-		this.emit('end');
-
-		clearTimeout(this._retryTimer);
 	}
 
 }
