@@ -1,10 +1,11 @@
 {
   "name": "redis-nextra",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Node.js V8 Redis, enhanced with util.promisify. Written in full ES2017. Async is the future!",
   "main": "src/index.js",
+  "types": "typings/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npx eslint src && npx tslint 'typings/*.ts'"
   },
   "repository": {
     "type": "git",

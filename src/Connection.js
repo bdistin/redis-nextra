@@ -4,12 +4,38 @@ const hiredis = require('hiredis');
 
 class Connection extends EventEmitter {
 
+	/**
+	 * @param {RedisClient} client The client in which Redis-nextra got initialized.
+	 * @param {Host} host The host object to connect with.
+	 * @param {ServerConnectionOptions} options The options for the server connection.
+	 */
 	constructor(client, host, options = {}) {
 		super();
+
+		/**
+		 * The client in which Redis-nextra got initialized with.
+		 * @type {RedisClient}
+		 */
 		this.client = client;
+
+		/**
+		 * @type {Host}
+		 */
 		this.host = host;
+
+		/**
+		 * @type {number}
+		 */
 		this.retryDelay = options.retryDelay || 2000;
+
+		/**
+		 * @type {boolean}
+		 */
 		this.socketNoDelay = typeof options.socketNoDelay === 'undefined' ? true : !!options.socketNoDelay;
+
+		/**
+		 * @type {boolean}
+		 */
 		this.socketKeepAlive = typeof options.socketKeepAlive === 'undefined' ? true : !!options.socketKeepAlive;
 		this.stream = net.createConnection(this.host.port, this.host.host);
 		if (this.socketNoDelay) this.stream.setNoDelay(true);
@@ -18,10 +44,19 @@ class Connection extends EventEmitter {
 
 		this.reader = new hiredis.Reader();
 
+		/**
+		 * @type {Array<Object|Function>}
+		 */
 		this.handlers = [];
 		this._attachEvents();
 	}
 
+	/**
+	 * Write data into the connection stream.
+	 * @param {string} cmd The name of the command to execute.
+	 * @param {(Buffer[]|string[])} pack An array of packages to write.
+	 * @param {Object|Function} handler A function of an object containing both Resolve and Reject parameters.
+	 */
 	write(cmd, pack, handler) {
 		this.handlers.push(handler);
 
@@ -48,6 +83,10 @@ class Connection extends EventEmitter {
 		if (command) { this.stream.write(command); }
 	}
 
+	/**
+	 * Terminate this connection.
+	 * @returns {void}
+	 */
 	end() {
 		if (this.ended) { return; }
 
@@ -59,6 +98,11 @@ class Connection extends EventEmitter {
 		clearTimeout(this._retryTimer);
 	}
 
+	/**
+	 * Attach events to the stream.
+	 * @returns {void}
+	 * @private
+	 */
 	_attachEvents() {
 		this.stream.on('connect', () => {
 			this.connected = true;
@@ -94,6 +138,12 @@ class Connection extends EventEmitter {
 		});
 	}
 
+	/**
+	 * Handle the connection losts.
+	 * @param {string} reason The reason of why the connection got lost.
+	 * @returns {void}
+	 * @private
+	 */
 	_connectionLost(reason) {
 		if (this.ended || this.reconnecting) { return; }
 
