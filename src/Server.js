@@ -3,13 +3,53 @@ const OfflineQueue = require('./OfflineQueue.js');
 
 class Server {
 
+	/**
+	 * @typedef  {Object} ServerConnectionOptions
+	 * @property {boolean} socketNoDelay
+	 * @property {boolean} socketKeepAlive
+	 * @property {number} retryDelay
+	 * @property {Host} host
+	 */
+
+	/**
+	 * @param {RedisClient} client The Redis client.
+	 * @param {ServerManager} manager The ServerManager that handles this instance.
+	 * @param {Host} host The host object to connect with.
+	 */
 	constructor(client, manager, host) {
+		/**
+		 * @type {RedisClient}
+		 */
 		this.client = client;
+
+		/**
+		 * @type {Host}
+		 */
 		this.host = host;
+
+		/**
+		 * @type {boolean}
+		 */
 		this.connected = false;
+
+		/**
+		 * @type {boolean}
+		 */
 		this.weight = host.weight;
+
+		/**
+		 * @type {boolean}
+		 */
 		this.removeTimeout = manager.serverOptions.removeTimeout;
+
+		/**
+		 * @type {number}
+		 */
 		this.connectionsPerServer = manager.serverOptions.connectionsPerServer || 1;
+
+		/**
+		 * @type {boolean}
+		 */
 		this.enableOfflineQueue = typeof manager.serverOptions.enableOfflineQueue === 'undefined' ? true : !!manager.serverOptions.enableOfflineQueue;
 
 		this.connectionOptions = {
@@ -19,10 +59,24 @@ class Server {
 			host: host
 		};
 
+		/**
+		 * @type {ServerConnectionOptions}
+		 */
 		this.offlineQueue = this.enableOfflineQueue ? new OfflineQueue() : null;
+
+		/**
+		 * @type {Connection[]}
+		 */
 		this.connections = this._createConnections();
 	}
 
+	/**
+	 * Send a command to Redis.
+	 * @param {string} cmd The command name to execute.
+	 * @param {any[]} args The arguments for the command to execute.
+	 * @param {Object} next The Promise to Resolve or Reject.
+	 * @returns {Promise<any>}
+	 */
 	sendCommand(cmd, args, next) {
 		if (this.connections.length === 1) {
 			const conn = this.connections[0];
@@ -44,6 +98,10 @@ class Server {
 		return next.reject(new Error(`Unable to acquire connection to server ${this.host.string}`));
 	}
 
+	/**
+	 * Terminate this server instance.
+	 * @returns {void}
+	 */
 	end() {
 		for (const conn of this.connections) conn.end();
 		this.offlineQueue.flush(new Error(`Server connection lost to ${this.host.string}`));
@@ -52,6 +110,11 @@ class Server {
 		this.ended = true;
 	}
 
+	/**
+	 * Create connections.
+	 * @returns {Connection[]}
+	 * @private
+	 */
 	_createConnections() {
 		const conns = [];
 
@@ -66,6 +129,11 @@ class Server {
 		return conns;
 	}
 
+	/**
+	 * Check the server's state.
+	 * @returns {void}
+	 * @private
+	 */
 	_checkState() {
 		const oldstate = this.connected;
 		this.connected = false;
